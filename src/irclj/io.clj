@@ -15,5 +15,5 @@
    (let [buf (make-array Byte/TYPE 2000)
          ret (.read istream buf)]
      (if (not (= ret -1))
-       (into (take ret (seq buf)) (byte-seq istream))
+       (concat (take ret (seq buf)) (byte-seq istream))
        (.close istream)))))
