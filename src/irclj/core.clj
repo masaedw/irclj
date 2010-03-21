@@ -1,5 +1,6 @@
 (ns irclj.core
-  (:use irclj.io))
+  (:use irclj.io irclj.util)
+  (:import (com.ibm.icu.text CharsetDetector)))
 
 (defn connect
   "connect to irc server"
@@ -13,6 +14,16 @@
   [handler]
   )
 
-(defn parse-irc-response
-  [seq]
-  ())
+(def byte-seq->str
+     (let [detector (CharsetDetector.)]
+       (fn this
+         ([seq]
+            (this seq nil))
+         ([seq coding]
+            (.getString detector (into-array Byte/TYPE seq) coding)))))
+
+(defn raw-command-seq
+  [istream]
+  (map byte-seq->str
+       (partition-with+ #(not (= 10 %))
+                        (byte-seq istream))))
