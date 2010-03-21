@@ -13,3 +13,6 @@
   [handler]
   )
 
+(defn parse-irc-response
+  [seq]
+  ())

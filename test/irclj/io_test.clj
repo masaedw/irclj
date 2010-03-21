@@ -1,4 +1,4 @@
-(ns irclj.core-test
+(ns irclj.io-test
   (:use [irclj.io] :reload-all)
   (:use [clojure.test]))
 

@@ -17,5 +17,3 @@
      (if (not (= ret -1))
        (into (take ret (seq buf)) (byte-seq istream))
        (.close istream)))))
-
-   
