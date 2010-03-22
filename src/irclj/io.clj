@@ -1,5 +1,7 @@
 (ns irclj.io
-  (:import (java.net Socket)))
+  (:import (java.net Socket)
+           (com.ibm.icu.text CharsetDetector))
+  )
 
 (defn open-socket
   [host port]
@@ -29,3 +31,11 @@
      (if (not (= ret -1))
        (concat (take ret (seq buf)) (byte-seq istream))
        (.close istream)))))
+
+(defn byte-seq->str
+  "バイトシーケンスを文字列に変換する"
+  ([seq]
+     (byte-seq->str seq nil))
+  ([seq coding]
+     (let [detector (CharsetDetector.)]
+       (.getString detector (into-array Byte/TYPE seq) coding))))
