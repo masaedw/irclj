@@ -7,7 +7,7 @@
                     OutputStreamWriter)))
 
 (defn -main [& args]
-  (let [[s i o] (irclj.io/open-socket "localhost" 3000)]
+  (with-socket [s i o] "localhost" 3000
     (let [w (PrintWriter. (OutputStreamWriter. o))]
       (doto w
         (.print (str "GET /projects/ HTTP/1.0\r\n"
@@ -17,4 +17,5 @@
       (let [x (raw-command-seq i)]
         (doseq [line x]
           (print line)))
-      (flush))))
+      (flush)))
+  (System/exit 0))

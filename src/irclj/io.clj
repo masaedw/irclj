@@ -8,6 +8,18 @@
      (.getInputStream sock)
      (.getOutputStream sock)]))
 
+(defmacro with-socket
+  [bindings host port & body]
+  `(let [[s# i# o#] (open-socket ~host ~port)]
+     (let [~bindings [s# i# o#]]
+       (try
+        ~@body
+        (finally
+         (.close o#)
+         (.close i#)
+         (.close s#)
+         )))))
+
 (defn byte-seq
   "InputStreamをバイトシーケンスに変換する"
   [istream]
