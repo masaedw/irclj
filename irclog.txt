@@ -1,0 +1,61 @@
+:tucc.aa0.netvolante.jp NOTICE AUTH :*** Looking up your hostname...
+:tucc.aa0.netvolante.jp NOTICE AUTH :*** Found your hostname
+NICK hogehoge
+USER hoge hoge hoge :hoge
+:tucc.aa0.netvolante.jp 001 hogehoge :Welcome to the EFnet Internet Relay Chat Network hogehoge
+:tucc.aa0.netvolante.jp 002 hogehoge :Your host is tucc.aa0.netvolante.jp[0.0.0.0/6667], running version hybrid-7.2.3
+:tucc.aa0.netvolante.jp 003 hogehoge :This server was created Dec  1 2008 at 03:19:51
+:tucc.aa0.netvolante.jp 004 hogehoge tucc.aa0.netvolante.jp hybrid-7.2.3 CDGabcdfgiklnorsuwxyz biklmnopstveI bkloveI
+:tucc.aa0.netvolante.jp 005 hogehoge CALLERID CASEMAPPING=rfc1459 DEAF=D KICKLEN=160 MODES=4 NICKLEN=20 PREFIX=(ov)@+ STATUSMSG=@+ TOPICLEN=160 NETWORK=EFnet MAXLIST=beI:25 MAXTARGETS=4 CHANTYPES=#& :are supported by this server
+:tucc.aa0.netvolante.jp 005 hogehoge CHANLIMIT=#&:15 CHANNELLEN=50 EXCEPTS=e INVEX=I CHANMODES=eIb,k,l,imnpst AWAYLEN=160 KNOCK ELIST=CMNTU SAFELIST :are supported by this server
+:tucc.aa0.netvolante.jp 042 hogehoge 392AAAD33 :your unique ID
+:tucc.aa0.netvolante.jp 251 hogehoge :There are 0 users and 41 invisible on 1 servers
+:tucc.aa0.netvolante.jp 254 hogehoge 46 :channels formed
+:tucc.aa0.netvolante.jp 255 hogehoge :I have 41 clients and 0 servers
+:tucc.aa0.netvolante.jp 265 hogehoge :Current local users: 41  Max: 55
+:tucc.aa0.netvolante.jp 266 hogehoge :Current global users: 41  Max: 55
+:tucc.aa0.netvolante.jp 250 hogehoge :Highest connection count: 55 (55 clients) (4962 connections received)
+:tucc.aa0.netvolante.jp 375 hogehoge :- tucc.aa0.netvolante.jp Message of the Day -
+:tucc.aa0.netvolante.jp 372 hogehoge :- This is ircd-hybrid Welcome to tucc
+:tucc.aa0.netvolante.jp 376 hogehoge :End of /MOTD command.
+:hogehoge!~hoge@7c29465b.i-revonet.jp MODE hogehoge :+i
+JOIN #develop  
+:hogehoge!~hoge@7c29465b.i-revonet.jp JOIN :#develop
+:tucc.aa0.netvolante.jp 332 hogehoge #develop :3+H/$NOCBj$J$s$G$b$I$&$>!#IRC$N3F<o<B83$J$I$O#jikken$r$4MxMQ$/$@$5$$!#
+:tucc.aa0.netvolante.jp 333 hogehoge #develop enari_2010!~enari_201@opt-115-31-10-141.client.pikara.ne.jp 1268400171
+:tucc.aa0.netvolante.jp 353 hogehoge @ #develop :hogehoge masa_edw L_Ne_osk @logbird
+:tucc.aa0.netvolante.jp 366 hogehoge #develop :End of /NAMES list.
+PRIVMSG #develop hoge
+:masa_edw!~edward@7c29465b.i-revonet.jp PRIVMSG #develop :hoge
+:masa_edw!~edward@7c29465b.i-revonet.jp PRIVMSG #develop :$"$P$P
+PRIVMSG #develop :hogehogehogehoge
+PRIVMSG
+:tucc.aa0.netvolante.jp 461 hogehoge PRIVMSG :Not enough parameters
+PRIVMSG masa_edw :hi
+:masa_edw!~edward@7c29465b.i-revonet.jp PRIVMSG hogehoge :ho
+:masa_edw!~edward@7c29465b.i-revonet.jp PRIVMSG #develop :fuga
+:masa_edw!~edward@7c29465b.i-revonet.jp PRIVMSG #develop :op>hogehoge
+:logbird!~logbird@localhost MODE #develop +o hogehoge
+LIST
+:tucc.aa0.netvolante.jp 321 hogehoge Channel :Users  Name
+:tucc.aa0.netvolante.jp 322 hogehoge #curry 9 :
+:tucc.aa0.netvolante.jp 322 hogehoge #develop 4 :3+H/$NOCBj$J$s$G$b$I$&$>!#IRC$N3F<o<B83$J$I$O#jikken$r$4MxMQ$/$@$5$$!#
+:tucc.aa0.netvolante.jp 322 hogehoge #FABgCT>pis02 2 :,
+:tucc.aa0.netvolante.jp 322 hogehoge #hotsand 17 :hotsand658rN.>l!!!!65ADMM$^$s$;!A10?MA0$G=82q
+:tucc.aa0.netvolante.jp 323 hogehoge :End of /LIST
+NAMES
+:tucc.aa0.netvolante.jp 353 hogehoge @ #develop :@hogehoge masa_edw L_Ne_osk @logbird
+:tucc.aa0.netvolante.jp 366 hogehoge * :End of /NAMES list.
+PART #develop
+:hogehoge!~hoge@7c29465b.i-revonet.jp PART #develop
+:masa_edw!~edward@7c29465b.i-revonet.jp INVITE hogehoge :#develop
+JOIN #develop
+:hogehoge!~hoge@7c29465b.i-revonet.jp JOIN :#develop
+:tucc.aa0.netvolante.jp 332 hogehoge #develop :3+H/$NOCBj$J$s$G$b$I$&$>!#IRC$N3F<o<B83$J$I$O#jikken$r$4MxMQ$/$@$5$$!#
+:tucc.aa0.netvolante.jp 333 hogehoge #develop enari_2010!~enari_201@opt-115-31-10-141.client.pikara.ne.jp 1268400171
+:tucc.aa0.netvolante.jp 353 hogehoge @ #develop :hogehoge masa_edw L_Ne_osk @logbird
+:tucc.aa0.netvolante.jp 366 hogehoge #develop :End of /NAMES list.
+PING :tucc.aa0.netvolante.jp
+PONG :tucc.aa0.netvolante.jp
+QUIT :bye
+ERROR :Closing Link: 7c29465b.i-revonet.jp (Quit: bye)

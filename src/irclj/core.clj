@@ -14,6 +14,73 @@
   [handler]
   )
 
+
+;; letter     =  %x41-5A / %x61-7A       ; A-Z / a-z
+;; digit      =  %x30-39                 ; 0-9
+;; hexdigit   =  digit / "A" / "B" / "C" / "D" / "E" / "F"
+;; special    =  %x5B-60 / %x7B-7D
+;;                  ; "[", "]", "\", "`", "_", "^", "{", "|", "}"
+(def LETTER "A-Za-z")
+(def DIGIT "\\d")
+(def HEXDIGIT (str DIGIT "A-Fa-f"))
+(def SPECIAL "\u005B-\u0060\u007B-\u007D")
+
+;; shortname ( letter / digit ) *( letter / digit / "-" )
+;;               *( letter / digit )
+;;                 ; as specified in RFC 1123 [HNAME]
+;; hostname   =  shortname *( "." shortname )
+(def SHORTNAME (str "[" LETTER DIGIT "](?:[-" LETTER DIGIT "]*[" LETTER DIGIT "])?"))
+(def HOSTNAME (str SHORTNAME "(?:\\." SHORTNAME ")*"))
+
+;; servername =  hostname
+(def SERVERNAME HOSTNAME)
+
+;; nickname   =  ( letter / special ) *8( letter / digit / special / "-" )
+(def NICKNAME (str "[" LETTER SPECIAL"][-" LETTER DIGIT SPECIAL "]*"))
+
+;; user       =  1*( %x01-09 / %x0B-0C / %x0E-1F / %x21-3F / %x41-FF )
+;;                 ; any octet except NUL, CR, LF, " " and "@"
+(def USER "[\u0001-\u0009\u000B-\u000C\u000E-\u001F\u0021-\u003F\u0041-\u00FF]+")
+
+;; ip4addr    =  1*3digit "." 1*3digit "." 1*3digit "." 1*3digit
+(def IP4ADDR "[#{DIGIT}]{1,3}(?:\\.[#{DIGIT}]{1,3}){3}")
+;; ip6addr    =  1*hexdigit 7( ":" 1*hexdigit )
+;; ip6addr    =/ "0:0:0:0:0:" ( "0" / "FFFF" ) ":" ip4addr
+(def IP6ADDR "(?:[#{HEXDIGIT}]+(?::[#{HEXDIGIT}]+){7}|0:0:0:0:0:(?:0|FFFF):#{IP4ADDR})")
+;; hostaddr   =  ip4addr / ip6addr
+(def HOSTADDR "(?:#{IP4ADDR}|#{IP6ADDR})")
+
+;; host       =  hostname / hostaddr
+(def HOST "(?:#{HOSTNAME}|#{HOSTADDR})")
+
+;; prefix     =  servername / ( nickname [ [ "!" user ] "@" host ] )
+(def PREFIX "(?:#{NICKNAME}(?:(?:!#{USER})?@#{HOST})?|#{SERVERNAME})")
+
+;; nospcrlfcl =  %x01-09 / %x0B-0C / %x0E-1F / %x21-39 / %x3B-FF
+;;                 ; any octet except NUL, CR, LF, " " and ":"
+(def NOSPCRLFCL "\u0001-\u0009\u000B-\u000C\u000E-\u001F\u0021-\u0039\u003B-\u00FF")
+
+;; command    =  1*letter / 3digit
+(def COMMAND "(?:[#{LETTER}]+|[#{DIGIT}]{3})")
+
+;; SPACE      =  %x20        ; space character
+;; middle     =  nospcrlfcl *( ":" / nospcrlfcl )
+;; trailing   =  *( ":" / " " / nospcrlfcl )
+;; params     =  *14( SPACE middle ) [ SPACE ":" trailing ]
+;;            =/ 14( SPACE middle ) [ SPACE [ ":" ] trailing ]
+(def MIDDLE "[#{NOSPCRLFCL}][:#{NOSPCRLFCL}]*")
+(def TRAILING "[: #{NOSPCRLFCL}]*")
+(def PARAMS "(?:((?: l+#{MIDDLE}){0,14})(?: +:(#{TRAILING}))?|((?: +#{MIDDLE}){14}):?(#{TRAILING}))")
+
+;; crlf       =  %x0D %x0A   ; "carriage return" "linefeed"
+;; message    =  [ ":" prefix SPACE ] command [ params ] crlf
+(def CRLF "\u000D\u000A")
+(def MESSAGE "(?::(#{PREFIX}) +)?(#{COMMAND})#{PARAMS}\\s*(#{CRLF}|\n|\r)")
+
+(def CLIENT_PATTERN  #"^NICKNAME(?:(?:!USER)?@HOST)$")
+(def MESSAGE_PATTERN #"^MESSAGE$")
+
+
 (defn raw-command-seq
   [istream]
   (map byte-seq->str
