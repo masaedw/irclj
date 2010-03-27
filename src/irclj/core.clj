@@ -1,4 +1,6 @@
 (ns irclj.core
+  "IRC Interface
+   nadoka 中の rice を基にclojure移植したもの"
   (:use irclj.io irclj.util)
   )
 
