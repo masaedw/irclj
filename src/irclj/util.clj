@@ -11,7 +11,8 @@
 (defn partition-with+
   "split-with+を残りの要素にも再帰的に適用したシーケンスを返す"
   [pred coll]
-  (let [[head tail] (split-with+ pred coll)]
-    (if (empty? tail)
-      (list head)
-      (cons head (partition-with+ pred tail)))))
+  (lazy-seq
+   (let [[head tail] (split-with+ pred coll)]
+     (if (empty? tail)
+       (list head)
+       (cons head (partition-with+ pred tail))))))
