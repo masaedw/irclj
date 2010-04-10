@@ -1,7 +1,9 @@
 (ns irclj.core
   "IRC Interface
    nadoka 中の rice を基にclojure移植したもの"
-  (:use irclj.io irclj.util)
+  (:use irclj.io
+        irclj.util
+        irclj.haskell)
   )
 
 (defn connect
@@ -15,8 +17,6 @@
   "send message"
   [handler]
   )
-
-
 ;; letter     =  %x41-5A / %x61-7A       ; A-Z / a-z
 ;; digit      =  %x30-39                 ; 0-9
 ;; hexdigit   =  digit / "A" / "B" / "C" / "D" / "E" / "F"
@@ -110,3 +110,44 @@
   (map byte-seq->str
        (partition-with+ #(not (= 10 %))
                         (byte-seq istream))))
+
+
+(defmulti irc-process (fn [env _ _] (:mode env)))
+
+;; 最初のアクセス → read-motd
+(defmethod irc-process :init [env writer command]
+  (doto writer
+    (.print (str "NICK fugahoge\r\n"
+                 "USER hoge hoge hoge :hoge\r\n"))
+    (.flush))
+  [(assoc env :mode :read-motd) writer command]
+  )
+
+;; motdよみこみ → loop
+(defmethod irc-process :read-motd [env writer command]
+  (if (re-find #"376" command)
+    (do
+      (doto writer
+        (.print (str "JOIN :#develop\r\n"))
+        (.flush))
+      [(assoc env :mode :loop) writer command])
+    [env writer command]
+    ))
+
+;; るーぷ
+(defmethod irc-process :loop [env writer command]
+  [env writer command]
+  )
+
+
+(defn irc-response
+  [env writer command]
+  (println env)
+  ;(pprint (line->message command))
+  (print command)
+  (flush)
+  (if (re-find #"PING" command)
+    (doto writer
+      (.print (str "PONG :tucc.aa0.netvolante.jp\r\n"))
+      (.flush)))
+  (irc-process env writer command))
