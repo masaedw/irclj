@@ -17,6 +17,10 @@
   "send message"
   [handler]
   )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Parse
+
 ;; letter     =  %x41-5A / %x61-7A       ; A-Z / a-z
 ;; digit      =  %x30-39                 ; 0-9
 ;; hexdigit   =  digit / "A" / "B" / "C" / "D" / "E" / "F"
@@ -60,7 +64,8 @@
 
 ;; nospcrlfcl =  %x01-09 / %x0B-0C / %x0E-1F / %x21-39 / %x3B-FF
 ;;                 ; any octet except NUL, CR, LF, " " and ":"
-(def NOSPCRLFCL "\\x01-\\x09\\x0B-\\x0C\\x0E-\\x1F\\x21-\\x39\\x3B-\\xFF")
+;;(def NOSPCRLFCL "\\x01-\\x09\\x0B-\\x0C\\x0E-\\x1F\\x21-\\x39\\x3B-\\xFF")
+(def NOSPCRLFCL "[^\\x00\\x0A\\x0D\\x20\\x3A]")
 
 ;; command    =  1*letter / 3digit
 (def COMMAND (str "(?:[" LETTER "]+|[" DIGIT "]{3})"))
@@ -70,8 +75,10 @@
 ;; trailing   =  *( ":" / " " / nospcrlfcl )
 ;; params     =  *14( SPACE middle ) [ SPACE ":" trailing ]
 ;;            =/ 14( SPACE middle ) [ SPACE [ ":" ] trailing ]
-(def MIDDLE (str "[" NOSPCRLFCL "][:" NOSPCRLFCL "]*"))
-(def TRAILING (str "[: " NOSPCRLFCL "]*"))
+;;(def MIDDLE (str "[" NOSPCRLFCL "][:" NOSPCRLFCL "]*"))
+;;(def TRAILING (str "[: " NOSPCRLFCL "]*"))
+(def MIDDLE (str NOSPCRLFCL "(?::|" NOSPCRLFCL ")*"))
+(def TRAILING (str "(?:[: ]|" NOSPCRLFCL ")*"))
 (def PARAMS (str "(?:((?: +" MIDDLE "){0,14})(?: +:(" TRAILING "))?|((?: +" MIDDLE "){14}):?(" TRAILING "))"))
 
 ;; crlf       =  %x0D %x0A   ; "carriage return" "linefeed"
@@ -92,7 +99,7 @@
   [line]
   (let [[src _1 _2 _3 _4 _5 _6] (re-find MESSAGE_PATTERN line)]
     (cond (nil? src)
-            nil
+            line
           (not (empty? _3))
             (build-message _1 _2 (concat (rest (.split _3 " ")) (list _4)))
           (not (empty? _5))
@@ -105,12 +112,22 @@
             (build-message _1 _2 '())
           )))
 
-(defn raw-command-seq
-  [istream]
-  (map byte-seq->str
-       (partition-with+ #(not (= 10 %))
-                        (byte-seq istream))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; integration of network and parse
 
+(defn partition-when-ln [bytes]
+  (partition-when #(= 10 %) bytes))
+
+(defn partition-when-ln->str [bytes]
+  (map byte-seq->str (partition-when-ln bytes)))
+
+(defn msg-seq
+  [istream]
+  (concat (map line->message (partition-when-ln->str (sock-read istream)))
+          (lazy-seq (msg-seq istream))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
 
 (defmulti irc-process (fn [env _ _] (:mode env)))
 
