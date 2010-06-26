@@ -1,5 +1,5 @@
 (ns irclj.io
-  (:import (com.ibm.icu.text CharsetDetector))
+  (:import (java.net Socket))
   )
 
 (defn open-socket
@@ -22,9 +22,9 @@
          (.close s#)
          )))))
 
-(defn read
+(defn sock-read
   "ソケットから読み出せるデータを全部読む (TODO: 正しく実装する)"
   [^java.io.InputStream is]
   (let [buf (make-array Byte/TYPE 2000) ;; 全部読んでない!
-        len (.read istream buf)]
+        len (.read is buf)]
     (take len buf)))

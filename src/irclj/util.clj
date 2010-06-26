@@ -2,6 +2,7 @@
   (:import (com.ibm.icu.text CharsetDetector))
   )
 
+
 (defn split-with+
   "predが真の要素に加えて、最初に偽になった要素がとりだされる版のsplit-with"
   [pred coll]
@@ -19,6 +20,28 @@
            (if (empty? tail)
              (empty head)
              (partition-with+ pred tail))))))
+
+(defn take-to-first-orig
+  "Returns a lazy sequence of successive items from coll up to
+  and including the point at which it (pred item) returns true.
+  pred must be free of side-effects."
+  [pred coll]
+  (lazy-seq
+   (when-let [s (seq coll)]
+     (if-not (pred (first s))
+       (cons (first s) (take-to-first-orig pred (rest s)))
+       (list (first s))))))
+
+(defn take-to-first
+  "Returns a lazy sequence of successive items from coll up to
+  and including the point at which it (pred item) returns true.
+  pred must be free of side-effects."
+  [pred coll]
+  (if (seq coll)
+    (map last
+         (take-while (comp (complement pred) first)
+                     (cons (list (first coll)) (partition 2 1 coll))))
+    (lazy-seq)))
 
 (defn partition-when
   "Applies f to each value in coll, splitting it each time f returns
