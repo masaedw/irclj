@@ -3,19 +3,8 @@
    nadoka 中の rice を基にclojure移植したもの"
   (:use irclj.io
         irclj.util
-        irclj.haskell)
-  )
-
-(defn connect
-  "connect to irc server"
-  ([host port nick]
-     (connect host port nick nil))
-  ([host port nick password]
-     #{:thread nil}))
-
-(defn send-message
-  "send message"
-  [handler]
+        irclj.haskell
+        clojure.contrib.pprint)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -101,7 +90,7 @@
     (cond (nil? src)
             line
           (not (empty? _3))
-            (build-message _1 _2 (concat (rest (.split _3 " ")) (list _4)))
+            (build-message _1 _2 (concat (rest (.split _3 " ")) (list _4))) ;; TODO _4 が nil だとなんかかっこわるいデータになる
           (not (empty? _5))
             (build-message _1 _2 (concat (rest (.split _5 " ")) (list _6)))
           (not (empty? _4))
@@ -127,44 +116,47 @@
           (lazy-seq (msg-seq istream))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;
+;; bot
+
+(def init-env {:mode :init})
 
 (defmulti irc-process (fn [env _ _] (:mode env)))
 
-;; 最初のアクセス → read-motd
-(defmethod irc-process :init [env writer command]
+(defn print-command
+  [writer cmd & arg]
   (doto writer
-    (.print (str "NICK fugahoge\r\n"
-                 "USER hoge hoge hoge :hoge\r\n"))
-    (.flush))
-  [(assoc env :mode :read-motd) writer command]
+    (.print (apply str (cons cmd arg)))
+    (.flush)))
+
+;; 最初のアクセス → read-motd
+(defmethod irc-process :init [env writer msg]
+  (print-command writer
+                 "NICK hogehoge\r\n"
+                 "USER hoge hoge hoge :hoge\r\n")
+  [(assoc env :mode :read-motd) msg]
   )
 
 ;; motdよみこみ → loop
-(defmethod irc-process :read-motd [env writer command]
-  (if (re-find #"376" command)
+(defmethod irc-process :read-motd [env writer msg]
+  (if (= "376" (:command msg))
     (do
-      (doto writer
-        (.print (str "JOIN :#develop\r\n"))
-        (.flush))
-      [(assoc env :mode :loop) writer command])
-    [env writer command]
+      (print-command writer "JOIN :#develop\r\n")
+      [(assoc env :mode :loop) msg])
+    [env msg]
     ))
 
 ;; るーぷ
-(defmethod irc-process :loop [env writer command]
-  [env writer command]
+(defmethod irc-process :loop [env writer msg]
+  (if (and (= "PRIVMSG" (:command msg))
+           (re-find #"やあ|hi" (nth (:params msg) 1)))
+    (print-command writer "PRIVMSG #develop :yaa\r\n"))
+  [env msg]
   )
 
-
 (defn irc-response
-  [env writer command]
-  (println env)
-  ;(pprint (line->message command))
-  (print command)
+  [env writer msg]
+  (pprint [env msg])
   (flush)
-  (if (re-find #"PING" command)
-    (doto writer
-      (.print (str "PONG :tucc.aa0.netvolante.jp\r\n"))
-      (.flush)))
-  (irc-process env writer command))
+  (if (= "PING" (:command msg))
+    (print-command writer "PONG :tucc.aa0.netvolante.jp\r\n"))
+  (irc-process env writer msg))
