@@ -1,14 +1,14 @@
 (ns irclj
   (:gen-class)
   (:use irclj.io
-        irclj.util
         irclj.core
+        irclj.bot
         irclj.haskell
         )
   (:import (java.io PrintWriter
                     OutputStreamWriter)))
 
-(defn main [& args]
+(defn -main [& args]
   (with-socket [s i o] "tucc.aa0.netvolante.jp" 6667
     (let [writer (PrintWriter. (OutputStreamWriter. o))]
       (dorun
