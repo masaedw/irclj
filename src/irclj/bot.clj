@@ -33,12 +33,25 @@
 ;; }
 ;;
 
+;;
+;; filter APIs
+;;
+;; * privmsg-filter
+;;   signature: (fn [nick msg] ...)
+;;   nick: sender
+;;   msg: message body
+;;
+;;   privmsg-filter が何かを返したら、noticeされます。
+;;
+;;
+
 
 (defn dp [arg]
   (print "-------------------------------------------------------------------------------\n")
-  (pprint arg))
+  (pprint arg)
+  arg)
 
-(def filters (ref ()))
+(def privmsg-filters (ref {}))
 
 (def init-env {:mode :init})
 
@@ -71,9 +84,12 @@
 
 ;; るーぷ
 (defmethod irc-process :loop [env writer msg]
-  (if (and (= "PRIVMSG" (:command msg))
-           (re-find #"やあ|hi" (nth (:params msg) 1)))
-    (print-command writer "PRIVMSG #develop :yaa\r\n"))
+  (if (= "PRIVMSG" (:command msg))
+    (doseq [[_ filter] @privmsg-filters]
+      (let [value (str (filter ((dp (prefix->client (msg :prefix))) :nick)
+                               (nth (msg :params) 1)))]
+        (if (not (= value ""))
+          (print-command writer "NOTICE #develop :" value "\r\n")))))
   [env msg]
   )
 

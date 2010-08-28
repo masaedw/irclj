@@ -99,6 +99,11 @@
             (build-message _1 _2 '())
           )))
 
+(defn prefix->client
+  [prefix]
+  (let [[src nick user server] (re-find #"([^!]*)(?:!([^@]*)(?:@(.*))?)?" prefix)]
+    {:src src :nick nick :user user :server server}))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; integration of network and parse
 
