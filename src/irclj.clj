@@ -11,7 +11,7 @@
 (defn -main [& args]
   (let [config (load-file "config.clj")]
     (with-socket [s i o] (config :server) (config :port)
-      (let [writer (PrintWriter. (OutputStreamWriter. o))]
+      (let [writer (PrintWriter. (OutputStreamWriter. o "ISO2022JP"))]
         (dorun
          (pseudo-map-accum-l (fn [env msg] (irc-response env writer msg))
                              (merge config init-env)
