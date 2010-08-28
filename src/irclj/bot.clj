@@ -6,6 +6,28 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bot
 
+;; plugin-framework
+
+(defn clj-files-in [dirname]
+  (let [files (seq (.listFiles (java.io.File. dirname)))]
+    (filter #(re-find #".clj$" (.getPath %)) files)))
+
+(defn update-plugins
+  [plugins dirname]
+  (reduce (fn [plugins clj]
+            (let [plugin (plugins (.getPath clj))]
+              (if (or (not plugin) (> (.lastModified clj) (plugin :last-modified)))
+                (assoc plugins (.getPath clj) {:last-modified (.lastModified clj)
+                                               :proc (var-get (load-file (.getPath clj)))})
+                plugins)))
+          plugins
+          (clj-files-in dirname)))
+
+(defn reload-plugin
+  [plugins dirname]
+  (dosync (alter plugins update-plugins dirname)))
+
+
 ;;
 ;; structure of env
 ;;
@@ -85,11 +107,13 @@
 ;; るーぷ
 (defmethod irc-process :loop [env writer msg]
   (if (= "PRIVMSG" (:command msg))
-    (doseq [[_ filter] @privmsg-filters]
-      (let [value (str (filter ((dp (prefix->client (msg :prefix))) :nick)
-                               (nth (msg :params) 1)))]
-        (if (not (= value ""))
-          (print-command writer "NOTICE #develop :" value "\r\n")))))
+    (do
+      (reload-plugin privmsg-filters "filters")
+      (doseq [[_ filter] @privmsg-filters]
+        (let [value (str ((filter :proc) ((dp (prefix->client (msg :prefix))) :nick)
+                          (nth (msg :params) 1)))]
+          (if (not (= value ""))
+            (print-command writer "NOTICE #develop :" value "\r\n"))))))
   [env msg]
   )
 
@@ -100,3 +124,4 @@
   (if (= "PING" (:command msg))
     (print-command writer (str "PONG :" (env :server) "\r\n")))
   (irc-process env writer msg))
+
