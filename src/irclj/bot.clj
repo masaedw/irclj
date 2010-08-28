@@ -17,13 +17,17 @@
   (reduce (fn [plugins clj]
             (let [plugin (plugins (.getPath clj))]
               (if (or (not plugin) (> (.lastModified clj) (plugin :last-modified)))
-                (assoc plugins (.getPath clj) {:last-modified (.lastModified clj)
-                                               :proc (var-get (load-file (.getPath clj)))})
+                (try
+                  (assoc plugins (.getPath clj) {:last-modified (.lastModified clj)
+                                                 :proc (var-get (load-file (.getPath clj)))})
+                  (catch java.lang.Exception ex
+                    (dp (str (.getPath clj) " is not loaded"))
+                    plugins))
                 plugins)))
           plugins
           (clj-files-in dirname)))
 
-(defn reload-plugin
+(defn reload-plugins
   [plugins dirname]
   (dosync (alter plugins update-plugins dirname)))
 
@@ -108,7 +112,7 @@
 (defmethod irc-process :loop [env writer msg]
   (if (= "PRIVMSG" (:command msg))
     (do
-      (reload-plugin privmsg-filters "filters")
+      (reload-plugins privmsg-filters "filters")
       (doseq [[_ filter] @privmsg-filters]
         (let [value (str ((filter :proc) ((dp (prefix->client (msg :prefix))) :nick)
                           (nth (msg :params) 1)))]
