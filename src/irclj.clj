@@ -9,10 +9,11 @@
                     OutputStreamWriter)))
 
 (defn -main [& args]
-  (with-socket [s i o] "tucc.aa0.netvolante.jp" 6667
-    (let [writer (PrintWriter. (OutputStreamWriter. o))]
-      (dorun
-       (pseudo-map-accum-l (fn [env msg] (irc-response env writer msg))
-                           init-env
-                           (msg-seq i)))))
+  (let [config (load-file "config.clj")]
+    (with-socket [s i o] (config :server) (config :port)
+      (let [writer (PrintWriter. (OutputStreamWriter. o))]
+        (dorun
+         (pseudo-map-accum-l (fn [env msg] (irc-response env writer msg))
+                             (merge config init-env)
+                             (msg-seq i))))))
   (System/exit 0))

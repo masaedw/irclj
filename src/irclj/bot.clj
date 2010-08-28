@@ -6,6 +6,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bot
 
+(defn dp [arg]
+  (print "-------------------------------------------------------------------------------\n")
+  (pprint arg))
+
 (def init-env {:mode :init})
 
 (defmulti irc-process (fn [env _ _] (:mode env)))
@@ -18,11 +22,12 @@
 
 ;; 最初のアクセス → read-motd
 (defmethod irc-process :init [env writer msg]
-  (print-command writer
-                 "NICK hogehoge\r\n"
-                 "USER hoge hoge hoge :hoge\r\n")
-  [(assoc env :mode :read-motd) msg]
-  )
+  (let [host (.. java.net.InetAddress getLocalHost getHostName)]
+    (print-command writer
+                   "NICK " (env :nick) "\r\n"
+                   "USER " (env :user) " " host " " host " :" (env :realname) "\r\n")
+    [(assoc env :mode :read-motd) msg]
+    ))
 
 ;; motdよみこみ → loop
 (defmethod irc-process :read-motd [env writer msg]
@@ -46,5 +51,5 @@
   (pprint [env msg])
   (flush)
   (if (= "PING" (:command msg))
-    (print-command writer "PONG :tucc.aa0.netvolante.jp\r\n"))
+    (print-command writer (str "PONG :" (env :server) "\r\n")))
   (irc-process env writer msg))
