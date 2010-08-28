@@ -4,4 +4,5 @@
  :nick   "irclj"
  :user   "irclj"
  :realname "clojure"
+ :init-channels '("#develop")
 }

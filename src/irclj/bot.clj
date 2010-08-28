@@ -6,9 +6,39 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; bot
 
+;;
+;; structure of env
+;;
+;; {
+;;  ;; config
+;;
+;;  :server "server name"
+;;  :port 6667 ;; port number
+;;  :nick "nick"
+;;  :user "user"
+;;  :realname "realname"
+;;  :init-channels '("#initial" "#channel" "#list")
+;;
+;;  ;; internal data
+;;
+;;  :mode :mode-of-loop
+;;
+;;  :channels '(list of <channel-info>)
+;; }
+;;
+;; <channel-info>
+;;
+;; {
+;;  :channel "#name"
+;; }
+;;
+
+
 (defn dp [arg]
   (print "-------------------------------------------------------------------------------\n")
   (pprint arg))
+
+(def filters (ref ()))
 
 (def init-env {:mode :init})
 
@@ -31,9 +61,10 @@
 
 ;; motdよみこみ → loop
 (defmethod irc-process :read-motd [env writer msg]
-  (if (= "376" (:command msg))
+  (if (= "376" (:command msg)) ;; motdが終わった
     (do
-      (print-command writer "JOIN :#develop\r\n")
+      (doseq [channel (env :init-channels)]
+        (print-command writer "JOIN :" channel "\r\n"))
       [(assoc env :mode :loop) msg])
     [env msg]
     ))
@@ -48,7 +79,7 @@
 
 (defn irc-response
   [env writer msg]
-  (pprint [env msg])
+  (pprint msg)
   (flush)
   (if (= "PING" (:command msg))
     (print-command writer (str "PONG :" (env :server) "\r\n")))
