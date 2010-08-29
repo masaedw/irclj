@@ -26,7 +26,7 @@
                   (assoc plugins (.getPath clj) {:last-modified (.lastModified clj)
                                                  :proc (var-get (load-file (.getPath clj)))})
                   (catch java.lang.Exception ex
-                    (dp (str (.getPath clj) " is not loaded"))
+                    (dp (str (.getPath clj) " is not loaded -- " ex))
                     plugins))
                 plugins)))
           plugins
