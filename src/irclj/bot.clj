@@ -114,10 +114,10 @@
     (do
       (reload-plugins privmsg-filters "filters")
       (doseq [[_ filter] @privmsg-filters]
-        (let [value (str ((filter :proc) ((dp (prefix->client (msg :prefix))) :nick)
+        (let [value (str ((filter :proc) ((prefix->client (msg :prefix)) :nick)
                           (nth (msg :params) 1)))]
           (if (not (= value ""))
-            (print-command writer "NOTICE #develop :" value "\r\n"))))))
+            (print-command writer "NOTICE " (first (msg :params)) " :" value "\r\n"))))))
   [env msg]
   )
 
@@ -128,4 +128,3 @@
   (if (= "PING" (:command msg))
     (print-command writer (str "PONG :" (env :server) "\r\n")))
   (irc-process env writer msg))
-
