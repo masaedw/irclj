@@ -2,7 +2,8 @@
   "IRC Interface
    パースの部分は nadoka 中の rice を clojure に移植したもの"
   (:use irclj.io
-        irclj.util)
+        irclj.util
+        clojure.contrib.pprint)
   )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -115,5 +116,4 @@
 
 (defn msg-seq
   [istream]
-  (concat (map line->message (partition-when-ln->str (sock-read istream)))
-          (lazy-seq (msg-seq istream))))
+  (map line->message (partition-when-ln->str (sock-read istream))))

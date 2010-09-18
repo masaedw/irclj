@@ -1,5 +1,6 @@
 (ns irclj.io
   (:import (java.net Socket))
+  (:use irclj.util)
   )
 
 (defn open-socket
