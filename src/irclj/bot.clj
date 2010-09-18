@@ -53,13 +53,13 @@
 ;;
 ;;  :auth-mode :init / :authorized
 ;;
-;;  :channels '(list of <channel-info>)
+;;  :channels {:channel-name <channel-info> ...}
 ;; }
 ;;
 ;; <channel-info>
 ;;
 ;; {
-;;  :channel "#name"
+;;  :name "#name"
 ;; }
 ;;
 
@@ -77,6 +77,7 @@
 
 
 (def privmsg-filters (ref {}))
+(def privmsg-commands (ref {}))
 
 (def init-env {:auth-mode :init})
 
@@ -105,14 +106,23 @@
     (print-command writer "JOIN :" channel "\r\n"))
   env)
 
+(defn- apply-plugin
+  [plugin writer msg]
+  (let [value (str ((plugin :proc) ((prefix->client (msg :prefix)) :nick)
+                    (nth (msg :params) 1)))]
+    (if (not (= value ""))
+      (print-command writer "NOTICE " (first (msg :params)) " :" value "\r\n"))))
+
 (defmethod irc-process :PRIVMSG
   [env writer msg]
   (reload-plugins privmsg-filters "filters")
   (doseq [[_ filter] @privmsg-filters]
-    (let [value (str ((filter :proc) ((prefix->client (msg :prefix)) :nick)
-                      (nth (msg :params) 1)))]
-      (if (not (= value ""))
-        (print-command writer "NOTICE " (first (msg :params)) " :" value "\r\n"))))
+    (apply-plugin filter writer msg))
+
+  (reload-plugins privmsg-commands "commands")
+  (let [command (str "/" (first (.split (nth (msg :params) 1) " ")) ".clj")]
+    (doseq [[name plugin] @privmsg-commands :when (.endsWith name command)]
+      (apply-plugin plugin writer msg)))
   env)
 
 (defmethod irc-process :PING
@@ -124,6 +134,11 @@
   [env writer msg]
   (print-command writer "JOIN :" (nth (msg :params) 1) "\r\n")
   env)
+
+(defmethod irc-process :JOIN
+  [env writer msg]
+  (let [name (first (msg :params))]
+    (assoc-in env [:channels (keyword name)] {:name name})))
 
 (defmethod irc-process :default
   [env writer msg]
