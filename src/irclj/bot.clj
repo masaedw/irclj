@@ -120,6 +120,11 @@
   (print-command writer (str "PONG :" (env :server) "\r\n"))
   env)
 
+(defmethod irc-process :INVITE
+  [env writer msg]
+  (print-command writer "JOIN :" (nth (msg :params) 1) "\r\n")
+  env)
+
 (defmethod irc-process :default
   [env writer msg]
   env)
