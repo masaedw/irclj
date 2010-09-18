@@ -36,7 +36,6 @@
   [plugins dirname]
   (dosync (alter plugins update-plugins dirname)))
 
-
 ;;
 ;; structure of env
 ;;
@@ -52,7 +51,7 @@
 ;;
 ;;  ;; internal data
 ;;
-;;  :mode :mode-of-loop
+;;  :auth-mode :init / :authorized
 ;;
 ;;  :channels '(list of <channel-info>)
 ;; }
@@ -79,9 +78,9 @@
 
 (def privmsg-filters (ref {}))
 
-(def init-env {:mode :init})
+(def init-env {:auth-mode :init})
 
-(defmulti irc-process (fn [env _ _] (:mode env)))
+(defmulti irc-process (fn [_ _ msg] (:command msg)))
 
 (defn print-command
   [writer cmd & arg]
@@ -89,42 +88,44 @@
     (.print (apply str (cons cmd arg)))
     (.flush)))
 
-;; 最初のアクセス → read-motd
-(defmethod irc-process :init [env writer msg]
-  (let [host (.. java.net.InetAddress getLocalHost getHostName)]
-    (print-command writer
-                   "NICK " (env :nick) "\r\n"
-                   "USER " (env :user) " " host " " host " :" (env :realname) "\r\n")
-    [(assoc env :mode :read-motd) msg]
-    ))
+(defmethod irc-process :NOTICE
+  [env writer msg]
+  (if (= (env :auth-mode) :init)
+    (let [host (.. java.net.InetAddress getLocalHost getHostName)]
+      (print-command writer
+                     "NICK " (env :nick) "\r\n"
+                     "USER " (env :user) " " host " " host " :" (env :realname) "\r\n")
+      (assoc env :auth-mode :authorized))
+    env))
 
-;; motdよみこみ → loop
-(defmethod irc-process :read-motd [env writer msg]
-  (if (= "376" (:command msg)) ;; motdが終わった
-    (do
-      (doseq [channel (env :init-channels)]
-        (print-command writer "JOIN :" channel "\r\n"))
-      [(assoc env :mode :loop) msg])
-    [env msg]
-    ))
 
-;; るーぷ
-(defmethod irc-process :loop [env writer msg]
-  (if (= "PRIVMSG" (:command msg))
-    (do
-      (reload-plugins privmsg-filters "filters")
-      (doseq [[_ filter] @privmsg-filters]
-        (let [value (str ((filter :proc) ((prefix->client (msg :prefix)) :nick)
-                          (nth (msg :params) 1)))]
-          (if (not (= value ""))
-            (print-command writer "NOTICE " (first (msg :params)) " :" value "\r\n"))))))
-  [env msg]
-  )
+(defmethod irc-process :376 ;; ENDOFMOTD
+  [env writer msg]
+  (doseq [channel (env :init-channels)]
+    (print-command writer "JOIN :" channel "\r\n"))
+  env)
+
+(defmethod irc-process :PRIVMSG
+  [env writer msg]
+  (reload-plugins privmsg-filters "filters")
+  (doseq [[_ filter] @privmsg-filters]
+    (let [value (str ((filter :proc) ((prefix->client (msg :prefix)) :nick)
+                      (nth (msg :params) 1)))]
+      (if (not (= value ""))
+        (print-command writer "NOTICE " (first (msg :params)) " :" value "\r\n"))))
+  env)
+
+(defmethod irc-process :PING
+  [env writer msg]
+  (print-command writer (str "PONG :" (env :server) "\r\n"))
+  env)
+
+(defmethod irc-process :default
+  [env writer msg]
+  env)
 
 (defn irc-response
   [env writer msg]
   (pprint msg)
   (flush)
-  (if (= "PING" (:command msg))
-    (print-command writer (str "PONG :" (env :server) "\r\n")))
-  (irc-process env writer msg))
+  [(irc-process env writer msg) msg])

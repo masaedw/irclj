@@ -80,7 +80,7 @@
 (defn build-message
   [prefix command params]
   {:prefix prefix
-   :command command
+   :command (keyword command)
    :params params})
 
 (defn line->message
