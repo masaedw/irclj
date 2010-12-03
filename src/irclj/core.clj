@@ -1,6 +1,8 @@
 (ns irclj.core
   "IRC Interface
-   パースの部分は nadoka 中の rice を clojure に移植したもの"
+   IRCの入出力レイヤーです
+
+   パースの部分は nadoka 中の rice を clojure に移植したものです"
   (:use irclj.io
         irclj.util
         clojure.contrib.pprint)
